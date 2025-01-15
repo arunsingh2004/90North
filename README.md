@@ -132,10 +132,5 @@ Set up a reverse proxy using Nginx and secure the application with HTTPS using a
 
 ---
 
-## License
-This project is open-source and available under the [MIT License](LICENSE).
-
----
-
 ## Support
 If you encounter any issues or have questions, please reach out to the project maintainer.
