@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Frontend Assignment</title>
+    <style>
+      /* General Styles */
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+      }
+
+      .navbar {
+        position: fixed;
+        top: 0;
+        width: 100%;
+        background-color: #333;
+        color: white;
+        text-align: center;
+        padding: 10px 0;
+        z-index: 1000;
+      }
+
+      .container {
+        display: flex;
+        margin-top: 50px;
+        min-height: 100vh;
+      }
+
+      .left-menu {
+        width: 20%;
+        background: #f4f4f4;
+        padding: 10px;
+        overflow: auto;
+        transition: width 0.3s;
+      }
+
+      .left-menu.collapsed {
+        width: 5%;
+      }
+
+      .main-content {
+        width: 60%;
+        padding: 20px;
+      }
+
+      .right-panel {
+        width: 20%;
+        background: #e9ecef;
+        padding: 10px;
+      }
+
+      .footer {
+        background-color: #333;
+        color: white;
+        text-align: center;
+        padding: 10px 0;
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+      }
+
+      .left-menu ul {
+        list-style-type: none;
+        padding: 0;
+      }
+
+      .left-menu li {
+        padding: 8px 0;
+        cursor: pointer;
+      }
+
+      @media screen and (max-width: 768px) {
+        .left-menu {
+          display: none;
+        }
+
+        .main-content {
+          width: 100%;
+        }
+
+        .right-panel {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="navbar">Fixed Navbar</div>
+
+    <div class="container">
+      <div class="left-menu" id="leftMenu">
+        <h1>Left Menu</h1>
+        <div class="left-menu" id="leftMenu">
+          <h3>Users</h3>
+          <ul>
+            {% for user in users %}
+            <li onclick="startChat('{{ user.username }}')">
+              {{ user.username }}
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        <br />
+        <button onclick="toggleMenu()">Toggle</button>
+      </div>
+      <div class="main-content">
+        <h1>Main Content Area</h1>
+        <div class="main-content">
+          <h1>Main Content Area</h1>
+          <div class="left-menu" id="leftMenu">
+            <h3>Users</h3>
+            <ul>
+              {% for user in users %}
+              <li onclick="startChat('{{ user.id }}', '{{ user.username }}')">
+                {{ user.username }}
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+          <div id="chat-box">
+            <h3 id="chat-with">Chat</h3>
+            <div id="messages"></div>
+            <form id="message-form">
+              <input
+                type="text"
+                id="message-input"
+                placeholder="Type a message..."
+              />
+              <button type="submit">Send</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="right-panel">Right-Side Panel</div>
+    </div>
+
+    <div class="footer">Footer</div>
+
+    <script>
+      let chatSocket;
+
+      function startChat(userId, username) {
+        const roomName = `chat_${userId}`;
+        const wsUrl = `ws://${window.location.host}/ws/chat/${roomName}/`;
+
+        console.log(`Connecting to WebSocket: ${wsUrl}`); // Debug the WebSocket URL
+
+        // Close the existing WebSocket if open
+        if (chatSocket && chatSocket.readyState !== WebSocket.CLOSED) {
+          chatSocket.close();
+        }
+
+        // Establish a new WebSocket connection
+        chatSocket = new WebSocket(wsUrl);
+
+        chatSocket.onopen = function () {
+          console.log("WebSocket connection established.");
+        };
+
+        chatSocket.onmessage = function (e) {
+          const data = JSON.parse(e.data);
+          const messagesDiv = document.getElementById("messages");
+          messagesDiv.innerHTML += `<p>${data.message}</p>`;
+        };
+
+        chatSocket.onclose = function (e) {
+          console.error("WebSocket connection closed unexpectedly.");
+        };
+
+        chatSocket.onerror = function (e) {
+          console.error("WebSocket error:", e);
+        };
+
+        // Handle message sending
+        document.getElementById("message-form").onsubmit = function (e) {
+          e.preventDefault();
+          const messageInput = document.getElementById("message-input");
+          const message = messageInput.value;
+
+          if (chatSocket.readyState === WebSocket.OPEN) {
+            chatSocket.send(JSON.stringify({ message }));
+            messageInput.value = "";
+          } else {
+            console.error("WebSocket is not open.");
+          }
+        };
+        console.log(
+          `Connecting to WebSocket: ws://${window.location.host}/ws/chat/chat_${userId}/`
+        );
+      }
+
+      function toggleMenu() {
+        const leftMenu = document.getElementById("leftMenu");
+        leftMenu.classList.toggle("collapsed");
+      }
+
+      function adjustScale() {
+        const width = window.innerWidth;
+        const container = document.querySelector(".container");
+        if (width <= 600) {
+          container.style.transform = "scale(0.5)";
+        } else if (width <= 700) {
+          container.style.transform = "scale(0.75)";
+        } else if (width <= 767) {
+          container.style.transform = "scale(0.8)";
+        } else if (width <= 1600) {
+          container.style.transform = "scale(0.9)";
+        } else {
+          container.style.transform = "scale(1)";
+        }
+      }
+
+      window.addEventListener("resize", adjustScale);
+      adjustScale();
+    </script>
+  </body>
+</html>
